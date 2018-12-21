@@ -1,3 +1,7 @@
+This fork makes the `pgbart` code functional on Python 3.X (tested on 3.6).
+
+----------------------------------------------------------------------------
+
 This folder contains the scripts used in the following paper:
 
 **Particle Gibbs for Bayesian Additive Regression Trees**
