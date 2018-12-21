@@ -5,11 +5,11 @@
 import sys
 import math
 import optparse
-import cPickle as pickle
+import pickle
 import numpy as np
 import random
 import time
-from itertools import izip
+# from itertools import izip
 from scipy.special import gammaln, digamma
 from scipy.special import gdtrc         # required only for regression
 from scipy.optimize import fsolve       # required only for regression
@@ -38,22 +38,22 @@ def assert_no_nan(mat, name='matrix'):
     try:
         assert(not any(np.isnan(mat)))
     except AssertionError:
-        print '%s contains NaN' % name
-        print mat
+        print('%s contains NaN' % name)
+        print(mat)
         raise AssertionError
 
 def check_if_one(val):
     try:
         assert(np.abs(val - 1) < 1e-12)
     except AssertionError:
-        print 'val = %s (needs to be equal to 1)' % val
+        print('val = %s (needs to be equal to 1)' % val)
         raise AssertionError
 
 def check_if_zero(val):
     try:
         assert(np.abs(val) < 1e-10)
     except AssertionError:
-        print 'val = %s (needs to be equal to 0)' % val
+        print('val = %s (needs to be equal to 0)' % val)
         raise AssertionError
 
 
@@ -72,8 +72,8 @@ def sample_multinomial(prob):
     try:
         k = int(np.where(np.random.multinomial(1, prob, size=1)[0]==1)[0])
     except TypeError:
-        print 'problem in sample_multinomial: prob = '
-        print prob
+        print('problem in sample_multinomial: prob = ')
+        print(prob)
         raise TypeError
     except:
         raise Exception
@@ -220,8 +220,8 @@ def parser_check_mcmc_options(parser, settings):
 
 def fail(parser, condition, msg):
     if condition:
-        print msg
-        print
+        print(msg)
+        # print
         parser.print_help()
         sys.exit(1)
 
@@ -262,7 +262,7 @@ def check_dataset(settings):
         try:
             assert(settings.dataset in regression_datasets)
         except AssertionError:
-            print 'Invalid dataset for regression; dataset = %s' % settings.dataset
+            print('Invalid dataset for regression; dataset = %s' % settings.dataset)
             raise AssertionError
     return special_cases
 
@@ -291,18 +291,18 @@ def load_data(settings):
             n_train = int(settings.dataset[pos[1]+1:pos[2]])
             n_test = int(settings.dataset[pos[2]+1:pos[3]])
             variance = float(settings.dataset[pos[3]+1:])
-        print 'n_dim = %s, n_train = %s, n_test = %s, variance = %s' % (n_dim, n_train, n_test, variance)
+        print('n_dim = %s, n_train = %s, n_test = %s, variance = %s'.format(n_dim, n_train, n_test, variance))
         try:
             assert(n_dim >= 5)
         except AssertionError:
-            print "For friedman dataset, dataset should be of the form friedman-dim (note '-') where dim >= 5"
+            print("For friedman dataset, dataset should be of the form friedman-dim (note '-') where dim >= 5")
             raise AssertionError
         data = load_friedman_data(n_dim, n_train, n_test, variance)
     elif settings.dataset[:4] == 'rsyn' or settings.dataset[:8] == 'ctslices' \
             or settings.dataset[:6] == 'houses' or settings.dataset[:3] == 'msd':
         data = load_rgf_datasets(settings)
     else:
-        print 'Unknown dataset: ' + settings.dataset
+        print('Unknown dataset: ' + settings.dataset)
         raise Exception
     assert(not data['is_sparse'])
     return data
@@ -419,8 +419,8 @@ def gen_friedman_data(n_dim, n_points, variance):
 def load_friedman_data(n_dim=5, n_train=100, n_test=100, variance=1):
     x_train, y_train, f_train = gen_friedman_data(n_dim, n_train, variance)
     x_test, y_test, f_test = gen_friedman_data(n_dim, n_test, variance)
-    print 'mse with ground truth labels i.e. mean((y-f)^2): train = %.3f' % (np.mean((y_train - f_train) ** 2))
-    print 'mse with ground truth labels i.e. mean((y-f)^2): test = %.3f' % (np.mean((y_test - f_test) ** 2))
+    print('mse with ground truth labels i.e. mean((y-f)^2): train = %.3f'.format(np.mean((y_train - f_train) ** 2)))
+    print('mse with ground truth labels i.e. mean((y-f)^2): test = %.3f'.format(np.mean((y_test - f_test) ** 2)))
     data = {'x_train': x_train, 'y_train': y_train, \
             'f_train': f_train, 'f_test': f_test, \
             'n_dim': n_dim, 'n_train': n_train, 'x_test': x_test, \
@@ -509,7 +509,9 @@ class Tree(object):
         do_not_split_node_id = np.random.rand(1) <= pnosplit
         split_not_supported = False
         if not do_not_split_node_id:
-            np.random.shuffle(cache['range_n_dim_shuffle'])
+            shuffle_obj = np.array(cache['range_n_dim_shuffle'])
+            print(shuffle_obj)
+            np.random.shuffle(shuffle_obj)
             for feat_id_chosen in cache['range_n_dim_shuffle']:
                 x_min, x_max, idx_min, idx_max, feat_score_cumsum_prior_current = \
                             self.get_info_dimension(data, cache, train_ids, settings, feat_id_chosen)
@@ -535,21 +537,23 @@ class Tree(object):
                         check_if_zero(cache_tmp['sum_y2_left'] + cache_tmp['sum_y2_right'] - self.sum_y2[node_id])
                         check_if_zero(cache_tmp['n_points_left'] + cache_tmp['n_points_right'] - self.n_points[node_id])
                     except AssertionError:
-                        print 'sum_y = %.2f, sum_y_left = %.2f, sum_y_right = %.2f, left+right = %.2f' % \
-                            (self.sum_y[node_id], cache_tmp['sum_y_left'], cache_tmp['sum_y_right'], cache_tmp['sum_y_left']+cache_tmp['sum_y_right'])
-                        print 'sum_y2 = %.2f, sum_y2_left = %.2f, sum_y2_right = %.2f, left+right = %.2f' % \
-                            (self.sum_y2[node_id], cache_tmp['sum_y2_left'], cache_tmp['sum_y2_right'], cache_tmp['sum_y2_left']+cache_tmp['sum_y2_right'])
+                        print('sum_y = %.2f, sum_y_left = %.2f, sum_y_right = %.2f, left+right = %.2f'.format(
+                            self.sum_y[node_id], cache_tmp['sum_y_left'], cache_tmp['sum_y_right'],
+                            cache_tmp['sum_y_left']+cache_tmp['sum_y_right']))
+                        print('sum_y2 = %.2f, sum_y2_left = %.2f, sum_y2_right = %.2f, left+right = %.2f'.format(
+                            self.sum_y2[node_id], cache_tmp['sum_y2_left'], cache_tmp['sum_y2_right'],
+                            cache_tmp['sum_y2_left']+cache_tmp['sum_y2_right']))
                         raise AssertionError
                 if settings.verbose >= 2:
-                    print 'loglik (of all data points in parent) = %.2f' % self.loglik[node_id]
+                    print('loglik (of all data points in parent) = %.2f' % self.loglik[node_id])
                 log_sis_ratio_loglik = loglik_left + loglik_right - self.loglik[node_id]
                 log_sis_ratio_prior = 0.
                 # contributions of feat_id and psplit cancel out for precomputed proposals
                 log_sis_ratio = log_sis_ratio_loglik + log_sis_ratio_prior
                 self.log_sis_ratio_d[node_id] = (log_sis_ratio_loglik, log_sis_ratio_prior)
                 if settings.verbose >= 2:
-                    print 'idx_split_chosen = %d, split_chosen = %f' % (idx_split_chosen, split_chosen)
-                    print 'feat_id_chosen = %f' % (feat_id_chosen)
+                    print('idx_split_chosen = %d, split_chosen = %f' % (idx_split_chosen, split_chosen))
+                    print('feat_id_chosen = %f' % (feat_id_chosen))
                 split_not_supported = False
                 break       # if you got this far, you deserve a break!
         if split_not_supported:
@@ -615,7 +619,7 @@ class Tree(object):
         try:
             self.leaf_nodes.remove(node_id)
         except:
-            print '%s is not a leaf node' % node_id
+            print('%s is not a leaf node' % node_id)
             raise Exception
         self.loglik.pop(node_id)
         self.train_ids.pop(node_id)
@@ -658,29 +662,29 @@ class Tree(object):
             logprior_nodeid = log_psplit + logprior_nodeid_tau \
                                 + log_prob_feat[feat_id_chosen]
             if settings.verbose >= 2:
-                print 'idx_split_chosen = %d, split_chosen = %f' % (idx_split_chosen, split_chosen)
-                print 'feat_id_chosen = %f' % (feat_id_chosen)
+                print('idx_split_chosen = %d, split_chosen = %f' % (idx_split_chosen, split_chosen))
+                print('feat_id_chosen = %f' % (feat_id_chosen))
             if settings.verbose >= 3:
-                print '3 terms in sample_split_prior for node_id = %s; %s, %s, %s' \
-                         % (node_id, log_psplit, logprior_nodeid_tau, log_prob_feat[feat_id_chosen])
-                print 'feat_id = %s, idx_split_chosen = %d, split_chosen = %f' % (feat_id_chosen, idx_split_chosen, split_chosen)
-                print 'log prob_split_prior = %s' % math.log(prob_split_prior)
-                print
+                print('3 terms in sample_split_prior for node_id = %s; %s, %s, %s' \
+                         % (node_id, log_psplit, logprior_nodeid_tau, log_prob_feat[feat_id_chosen]))
+                print('feat_id = %s, idx_split_chosen = %d, split_chosen = %f' % (feat_id_chosen, idx_split_chosen, split_chosen))
+                print('log prob_split_prior = %s' % math.log(prob_split_prior))
+                # print
         return (do_not_split_node_id, feat_id_chosen, split_chosen, idx_split_global, logprior_nodeid)
     
     def find_valid_dimensions(self, data, cache, train_ids, settings):
         score_feat = cache['prob_feat']
         first_time = True
         if settings.verbose >= 3:
-            print 'original score_feat = %s' % score_feat
+            print('original score_feat = %s' % score_feat)
         feat_split_info = {}
         for feat_id in cache['range_n_dim']:
             x_min, x_max, idx_min, idx_max, feat_score_cumsum_prior_current = \
                 self.get_info_dimension(data, cache, train_ids, settings, feat_id)
             feat_score_cumsum_prior_current = cache['feat_score_cumsum_prior'][feat_id] 
             if settings.verbose >= 3:
-                print 'x_min = %s, x_max = %s, idx_min = %s, idx_max = %s' % \
-                        (x_min, x_max, idx_min, idx_max)
+                print('x_min = %s, x_max = %s, idx_min = %s, idx_max = %s' % \
+                        (x_min, x_max, idx_min, idx_max))
             if idx_min == idx_max:
                 if first_time:          # lazy copy
                     score_feat = cache['prob_feat'].copy()
@@ -692,9 +696,9 @@ class Tree(object):
         feat_id_valid = [feat_id for feat_id in cache['range_n_dim'] if score_feat[feat_id] > 0]
         split_not_supported = (len(feat_id_valid) == 0)
         if settings.verbose >= 3:
-            print 'in find_valid_dimensions now'
-            print 'training data in current node =\n %s' % data['x_train'][train_ids, :]
-            print 'score_feat = %s, feat_id_valid = %s' % (score_feat, feat_id_valid)
+            print('in find_valid_dimensions now')
+            print('training data in current node =\n %s' % data['x_train'][train_ids, :])
+            print('score_feat = %s, feat_id_valid = %s' % (score_feat, feat_id_valid))
         return (feat_id_valid, score_feat, feat_split_info, split_not_supported)
 
     def recompute_prob_split(self, data, param, settings, cache, node_id):
@@ -724,13 +728,12 @@ class Tree(object):
                     self.logprior_new[node_id] = log_psplit + logprior_nodeid_tau \
                                                  + log_prob_feat[feat_id_chosen]
                     if settings.verbose >= 3:
-                        print '3 terms in recompute for node_id = %s; %s, %s, %s' \
+                        print('3 terms in recompute for node_id = %s; %s, %s, %s' \
                                % (node_id, log_psplit, logprior_nodeid_tau, \
-                                                     log_prob_feat[feat_id_chosen])
-                        print 'feat_id = %s, idx_split_chosen = %d, split_chosen = %f' % (feat_id_chosen, idx_split_chosen, split_chosen)
-                        print 'log prob_split_prior = %s' % np.log(prob_split_prior)
-                        print
-
+                                                     log_prob_feat[feat_id_chosen]))
+                        print('feat_id = %s, idx_split_chosen = %d, split_chosen = %f' % (feat_id_chosen, idx_split_chosen, split_chosen))
+                        print('log prob_split_prior = %s' % np.log(prob_split_prior))
+                        # print
     def get_info_dimension(self, data, cache, train_ids, settings, feat_id):
         x_min = np.min(data['x_train'][train_ids, feat_id])
         x_max = np.max(data['x_train'][train_ids, feat_id])
@@ -741,20 +744,20 @@ class Tree(object):
 
     def print_tree(self):
         try:
-            print 'leaf nodes are %s, non-leaf nodes are %s' % (self.leaf_nodes, self.non_leaf_nodes)
-            print 'logprior = %s, loglik = %s' % (self.logprior, self.loglik)
-            print 'sum(logprior) = %s, sum(loglik) = %s' % (self.compute_logprior(), self.compute_loglik())
+            print('leaf nodes are %s, non-leaf nodes are %s' % (self.leaf_nodes, self.non_leaf_nodes))
+            print('logprior = %s, loglik = %s' % (self.logprior, self.loglik))
+            print('sum(logprior) = %s, sum(loglik) = %s' % (self.compute_logprior(), self.compute_loglik()))
         except:
-            print 'leaf nodes are %s' % self.leaf_nodes
-        print 'node_id\tdepth\tfeat_id\t\tsplit_point'
+            print('leaf nodes are %s' % self.leaf_nodes)
+        print('node_id\tdepth\tfeat_id\t\tsplit_point')
         #for node_id in self.non_leaf_nodes:
         for node_id in self.node_info:
             try:
                 feat_id, split, idx_split_global = self.node_info[node_id]
             except (IndexError, ValueError):          # more than 2 values to unpack
                 feat_id, split = -1, np.float('nan')
-            print '%3d\t%3d\t%6d\t\t%.2f' % (node_id, get_depth(node_id), \
-                    feat_id, split)
+            print('%3d\t%3d\t%6d\t\t%.2f' % (node_id, get_depth(node_id), \
+                    feat_id, split))
 
     def gen_rules_tree(self):
         """ 
@@ -803,7 +806,7 @@ class Tree(object):
         """
         faster version of predict_real_val
         """
-        exec(self.rules)    # create variable "leaf_id"
+        leaf_id = exec(self.rules)    # create variable "leaf_id"
         pred_val = self.pred_val_n[leaf_id]
         return pred_val
 
@@ -846,8 +849,8 @@ class Tree(object):
             assert self.depth == depth
         except AssertionError:
             if max_leaf != 0:
-                print 'Error in check_depth: self.depth = %s, max_leaf = %s, depth(max_leaf) = %s' \
-                        % (self.depth, max_leaf, depth)
+                print('Error in check_depth: self.depth = %s, max_leaf = %s, depth(max_leaf) = %s' \
+                        % (self.depth, max_leaf, depth))
                 raise AssertionError
 
 
@@ -882,8 +885,8 @@ def test_compute_metrics_regression():
     y = np.random.randn(n)
     pred = np.ones(n)
     metrics = compute_metrics_regression(y, pred, pred_prob)
-    print 'chk if same: %s, %s' % (metrics['mse'], np.mean((y - 1) ** 2))
-    print 'chk if same: %s, %s' % (metrics['log_prob'], np.mean(np.log(pred_prob)))
+    print('chk if same: %s, %s' % (metrics['mse'], np.mean((y - 1) ** 2)))
+    print('chk if same: %s, %s' % (metrics['log_prob'], np.mean(np.log(pred_prob))))
     assert np.abs(metrics['mse'] - np.mean((y - 1) ** 2)) < 1e-3
     assert np.abs(metrics['log_prob'] - np.mean(np.log(pred_prob))) < 1e-3
 
@@ -899,7 +902,7 @@ def is_split_valid(split_chosen, x_min, x_max):
         assert(split_chosen > x_min)
         assert(split_chosen < x_max)
     except AssertionError:
-        print 'split_chosen <= x_min or >= x_max'
+        print('split_chosen <= x_min or >= x_max')
         raise AssertionError
 
 
@@ -929,7 +932,7 @@ def test_compute_nn_normalizer(mu_mean=0, mu_prec=0.1, lambda_bart=1, n_points=1
         # more trivial example, but don't try this with n_points > 10
         mu = mu_mean
         y = np.ones(n_points) * mu
-    print 'mu = %s' % (mu)
+    print('mu = %s' % (mu))
     sum_y = float(np.sum(y))
     sum_y2 = float(np.sum(y ** 2))
     param = empty()
@@ -941,13 +944,13 @@ def test_compute_nn_normalizer(mu_mean=0, mu_prec=0.1, lambda_bart=1, n_points=1
     cache['nn_prior_term'] = 0.5 * math.log(param.mu_prec) - 0.5 * param.mu_prec * param.mu_mean * param.mu_mean
     cache['half_log_2pi'] = 0.5 * math.log(2 * math.pi)
     log_marginal, post_param = compute_nn_normalizer(sum_y, sum_y2, n_points, param, cache)
-    print 'log_marginal (analytical) = %s, parameters of posterior = %s' % (log_marginal, post_param)
+    print('log_marginal (analytical) = %s, parameters of posterior = %s' % (log_marginal, post_param))
     log_marg_samples = -np.inf * np.ones(n_sampl)
     for s in range(n_sampl):
         mu = np.random.randn(1) / np.sqrt(mu_prec) + mu_mean
         log_marg_samples[s] = 0.5 * n_points * (math.log(lambda_bart) - math.log(2 * math.pi)) - 0.5 * lambda_bart * np.sum((y - mu) ** 2)
     log_marginal_s = logsumexp(log_marg_samples) - math.log(n_sampl)
-    print 'log_marginal (sampled) = %s' % log_marginal_s
+    print('log_marginal (sampled) = %s' % log_marginal_s)
     assert(np.abs(log_marginal_s - log_marginal) < 0.1)
 
 
@@ -978,9 +981,9 @@ def score_features(settings, feat_id_valid, score_feat, split_not_supported):
             try:
                 assert(np.abs(logsumexp(log_prob_feat)) < 1e-12)
             except AssertionError:
-                print 'feat_id_perm = %s' % feat_id_perm
-                print 'score_feat = %s' % score_feat
-                print 'logsumexp(log_prob_feat) = %s (needs to be 0)' % logsumexp(log_prob_feat)
+                print('feat_id_perm = %s' % feat_id_perm)
+                print('score_feat = %s' % score_feat)
+                print('logsumexp(log_prob_feat) = %s (needs to be 0)' % logsumexp(log_prob_feat))
                 raise AssertionError
     return (feat_id_perm, n_feat, log_prob_feat)
 
@@ -1008,10 +1011,10 @@ def compute_left_right_statistics(data, param, cache, train_ids, feat_id_chosen,
     cache_tmp['n_points_right'] = n_points_right
     cache_tmp['param_right'] = param_right
     if settings.verbose >= 2:
-        print 'feat_id_chosen = %s, split_chosen = %s' % (feat_id_chosen, split_chosen)
-        print 'y (left) = %s\ny (right) = %s' % (data['y_train'][train_ids_left], \
-                                                    data['y_train'][train_ids_right])
-        print 'loglik (left) = %.2f, loglik (right) = %.2f' % (loglik_left, loglik_right)
+        print('feat_id_chosen = %s, split_chosen = %s' % (feat_id_chosen, split_chosen))
+        print('y (left) = %s\ny (right) = %s' % (data['y_train'][train_ids_left], \
+                                                    data['y_train'][train_ids_right]))
+        print('loglik (left) = %.2f, loglik (right) = %.2f' % (loglik_left, loglik_right))
     return(train_ids_left, train_ids_right, cache_tmp, loglik_left, loglik_right)
 
 
@@ -1035,26 +1038,26 @@ def precompute(data, settings):
     # param.mu_mean = np.mean(data['y_train']) / param.m_bart
     param.mu_prec = float(param.m_bart * (2 * param.k_bart / y_diff) ** 2)
     mu_sd = 1.0 / math.sqrt(param.mu_prec)
-    print 'y_diff = %.3f, y_min = %.3f, y_max = %.3f' % (y_diff, y_min, y_max)
-    print 'mean(y) = %.3f' % np.mean(data['y_train'])
-    print 'mu_mean = %.3f, mu_prec = %.3f, mu_sd = %.3f' % (param.mu_mean, param.mu_prec, mu_sd)
-    print 'mu_mean - mu_sd = %.3f, mu_mean + mu_sd = %.3f' % (param.mu_mean - mu_sd, param.mu_mean + mu_sd)
+    print('y_diff = %.3f, y_min = %.3f, y_max = %.3f' % (y_diff, y_min, y_max))
+    print('mean(y) = %.3f' % np.mean(data['y_train']))
+    print('mu_mean = %.3f, mu_prec = %.3f, mu_sd = %.3f' % (param.mu_mean, param.mu_prec, mu_sd))
+    print('mu_mean - mu_sd = %.3f, mu_mean + mu_sd = %.3f' % (param.mu_mean - mu_sd, param.mu_mean + mu_sd))
     tmp_mean, tmp_stddev = param.mu_mean * param.m_bart, param.k_bart * math.sqrt(param.m_bart / param.mu_prec)
-    print 'tmp_mean = %.3f, tmp_stddev = %.3f' % (tmp_mean, tmp_stddev)
-    print 'expected CI (for k_bart = %.3f) = (%.3f, %.3f)' % (param.k_bart, tmp_mean-tmp_stddev, tmp_mean+tmp_stddev)
+    print('tmp_mean = %.3f, tmp_stddev = %.3f' % (tmp_mean, tmp_stddev))
+    print('expected CI (for k_bart = %.3f) = (%.3f, %.3f)' % (param.k_bart, tmp_mean-tmp_stddev, tmp_mean+tmp_stddev))
     #
     # See section 2.2.4 in page 272 of BART paper for how these parameters are set
     prec_unconditional = 1.0 / np.var(data['y_train'])
-    print 'unconditional variance = %.3f, prec = %.3f' % (1.0 / prec_unconditional, prec_unconditional)
+    print('unconditional variance = %.3f, prec = %.3f' % (1.0 / prec_unconditional, prec_unconditional))
     if settings.variance == "leastsquares":
         ls_coef, ls_sum_squared_residuals = linear_regression(data['x_train'], data['y_train'])
         ls_var = ls_sum_squared_residuals / (data['n_train'] - 1)
         prec = 1.0 / ls_var
-        print 'least squares variance = %.3f, prec = %.3f' % (ls_var, prec)
+        print('least squares variance = %.3f, prec = %.3f' % (ls_var, prec))
         if prec < prec_unconditional:
-            print 'least squares variance seems higher than unconditional ... something is weird'
+            print('least squares variance seems higher than unconditional ... something is weird')
     else:
-        print 'WARNING: lambda_bart initialized to unconditional precision'
+        print('WARNING: lambda_bart initialized to unconditional precision')
         prec = prec_unconditional
     param.alpha_bart = settings.alpha_bart
     param.beta_bart = compute_gamma_param(prec, param.alpha_bart, settings.q_bart)
@@ -1065,7 +1068,7 @@ def precompute(data, settings):
         param.lambda_bart = float(prec)
     else:
         param.lambda_bart = float(prec) * 2   # unconditional precision might be too pessimistic
-    print 'unconditional precision = %.2f, initial lambda_bart = %.2f' % (prec_unconditional, param.lambda_bart)
+    print('unconditional precision = %.2f, initial lambda_bart = %.2f' % (prec_unconditional, param.lambda_bart))
     settings.lambda_bart = param.lambda_bart
     param.log_lambda_bart = math.log(param.lambda_bart)
     cache_tmp['nn_prior_term'] = 0.5 * math.log(param.mu_prec) - 0.5 * param.mu_prec * param.mu_mean * param.mu_mean
@@ -1111,8 +1114,8 @@ def precompute(data, settings):
             # print n_unique, len(feat_score_cumsum_prior[feat_id])
             assert(n_unique == len(feat_score_cumsum_prior[feat_id]))
         if settings.verbose >= 3:
-            print 'x (sorted) =  %s' % (x_tmp[idx_sort])
-            print 'y (corresponding to sorted x) = %s' % (data['y_train'][idx_sort])
+            print('x (sorted) =  %s' % (x_tmp[idx_sort]))
+            print('y (corresponding to sorted x) = %s' % (data['y_train'][idx_sort]))
     cache['feat_val2idx'] = feat_val2idx
     cache['feat_idx2midpoint'] = feat_idx2midpoint
     cache['feat_score_cumsum_prior'] = feat_score_cumsum_prior
@@ -1171,10 +1174,10 @@ def compute_gamma_param(min_val, alpha, q, init_val=-1.0):
     try:
         assert(abs(gdtrc(solution, alpha, min_val) - q) < 1e-3)
     except AssertionError:
-        print 'Failed to obtain the right solution: beta_init = %s, q = %s, ' \
+        print('Failed to obtain the right solution: beta_init = %s, q = %s, ' \
                 'gdtrc(solution, alpha, min_val) = %s' \
-                % (init_val, q, gdtrc(solution, alpha, min_val))
-        print 'Trying a new initial value for beta'
+                % (init_val, q, gdtrc(solution, alpha, min_val)))
+        print('Trying a new initial value for beta')
         # new_init = alpha / min_val / 5
         new_init = max(0.001, init_val * 0.9)       # seems to work for compute_gamma_param(min_val, 3.0, 0.9)
         # very low values of new_init (~0) seem to crash; haven't tested for arbitrary combinations of alpha and q
@@ -1203,7 +1206,7 @@ def compute_normal_loglik(x, mu, prec):
 def init_performance_storage(data, settings):
     mcmc_tree_predictions = {}
     n_store = int((settings.n_iterations) / settings.n_run_avg)
-    print 'n_store = %s' % n_store
+    print('n_store = %s' % n_store)
     if settings.save == 1:
         for k_data in settings.perf_dataset_keys:
             k_data_n = 'n_' + k_data
@@ -1251,8 +1254,8 @@ def store_every_iteration(mcmc_tree_predictions, data, settings, param, itr, pre
             metrics['test']['mse'], metrics['test']['log_prob'], \
             time_current_itr, time.clock() - time_init_current]
     if itr == 0:
-        print 'itr, mse_train, log_prob_train, mse_test, log_prob_test, time_current_itr, time including prediction'
-    print '%7d, %s' % (itr, mcmc_tree_predictions['individual_perf_stats'][:, itr].T)
+        print('itr, mse_train, log_prob_train, mse_test, log_prob_test, time_current_itr, time including prediction')
+    print('%7d, %s' % (itr, mcmc_tree_predictions['individual_perf_stats'][:, itr].T))
 
 
 if __name__ == "__main__":

@@ -25,18 +25,18 @@ class PMCMC(object):
                 p.nodes_processed_itr = [[0]]
                 p.grow_nodes_itr = [[0]]
                 if settings.verbose >= 2:
-                    print 'leaf = %s, non_leaf = %s, node_info = %s' % (p.leaf_nodes, p.non_leaf_nodes, p.node_info)
+                    print('leaf = %s, non_leaf = %s, node_info = %s' % (p.leaf_nodes, p.non_leaf_nodes, p.node_info))
         if settings.verbose >= 2:
-            print '\ninitializing particle mcmc'
-            print log_pd
-            print log_weights
+            print('\ninitializing particle mcmc')
+            print(log_pd)
+            print(log_weights)
         self.update_p(particles, log_weights, log_pd, settings)
 
     def update_p(self, particles, log_weights, log_pd, settings):
         node_info_old = {}
         first_iter = False
         if settings.verbose >= 2:
-            print 'log_weights = %s' % log_weights
+            print('log_weights = %s' % log_weights)
         k = sample_multinomial(softmax(log_weights))
         try:
             node_info_old = self.p.node_info 
@@ -48,32 +48,32 @@ class PMCMC(object):
         self.p = particles[k] 
         self.log_pd = log_pd
         if settings.verbose >= 2:
-            print 'pid_sampled = %s' % k
-            print 'new tree:'
+            print('pid_sampled = %s' % k)
+            print('new tree:')
             self.p.print_tree()
         if not same_tree and settings.verbose >=1:
-            print 'non-identical trees'
+            print('non-identical trees')
         if k == 0 and not first_iter:
             assert same_tree
         elif same_tree and not first_iter:  # particles from pmcmc during init might be different
             if settings.verbose >= 1:
-                print 'identical tree without k == 0'
+                print('identical tree without k == 0')
             try:
                 check_if_zero(log_weights[k] - log_weights[0])
             except AssertionError:
-                print 'node_info_old = %s' % node_info_old
-                print 'same_tree = %s' % same_tree
-                print 'k = %s, particles[k].node_info = %s' % (k, particles[k].node_info)
-                print 'log_weights[0] = %s, log_weights[k] = %s' % \
-                        (log_weights[0], log_weights[k])
+                print('node_info_old = %s' % node_info_old)
+                print('same_tree = %s' % same_tree)
+                print('k = %s, particles[k].node_info = %s' % (k, particles[k].node_info))
+                print('log_weights[0] = %s, log_weights[k] = %s' % \
+                        (log_weights[0], log_weights[k]))
                 if not first_iter:
-                    print p_old.log_sis_ratio_d
-                print particles[0].log_sis_ratio_d
-                print particles[k].log_sis_ratio_d
+                    print(p_old.log_sis_ratio_d)
+                print(particles[0].log_sis_ratio_d)
+                print(particles[k].log_sis_ratio_d)
                 raise AssertionError
         self.p.check_depth()
         if settings.verbose >= 2:
-            print 'sampled particle = %5d, ancestry = %s' % (k, self.p.ancestry)
+            print('sampled particle = %5d, ancestry = %s' % (k, self.p.ancestry))
         return not same_tree
 
     def sample(self, data, settings, param, cache, cache_tmp):
@@ -126,7 +126,7 @@ def sample_tree(data, settings, param, cache, cache_tmp):
                 except ValueError:
                     pass
     if settings.debug:
-        print 'sampled new tree:'
+        print('sampled new tree:')
         p.print_tree()
     return p
 
@@ -153,8 +153,8 @@ class TreeMCMC(Tree):
         log_acc_loglik = (loglik - self.loglik[node_id])
         log_acc = log_acc_prior + log_acc_loglik
         if settings.verbose >= 2:
-            print 'compute_log_acc_g: log_acc_loglik = %s, log_acc_prior = %s' \
-                    % (log_acc_loglik, log_acc_prior)
+            print('compute_log_acc_g: log_acc_loglik = %s, log_acc_prior = %s' \
+                    % (log_acc_loglik, log_acc_prior))
         if loglik == -np.inf:   # just need to ensure that an invalid split is not grown
             log_acc = -np.inf
         return log_acc
@@ -172,11 +172,11 @@ class TreeMCMC(Tree):
         try:
             check_if_zero(logprior_children - self.logprior[left] - self.logprior[right])
         except AssertionError:
-            print 'oh oh ... looks like a bug in compute_log_inv_acc_p'
-            print 'term 1 = %s' % logprior_children
-            print 'term 2 = %s, 2a = %s, 2b = %s' % (self.logprior[left]+self.logprior[right], \
-                     self.logprior[left], self.logprior[right])
-            print 'node_id = %s, left = %s, right = %s, logprior = %s' % (node_id, left, right, self.logprior)
+            print('oh oh ... looks like a bug in compute_log_inv_acc_p')
+            print('term 1 = %s' % logprior_children)
+            print('term 2 = %s, 2a = %s, 2b = %s' % (self.logprior[left]+self.logprior[right], \
+                     self.logprior[left], self.logprior[right]))
+            print('node_id = %s, left = %s, right = %s, logprior = %s' % (node_id, left, right, self.logprior))
             raise AssertionError
         log_inv_acc_prior = np.log(self.compute_psplit(node_id, param)) \
                 - np.log(self.compute_pnosplit(node_id, param)) \
@@ -185,8 +185,8 @@ class TreeMCMC(Tree):
         log_inv_acc_loglik = (loglik - self.loglik[node_id])
         log_inv_acc = log_inv_acc_loglik + log_inv_acc_prior
         if settings.verbose >= 2:
-            print 'compute_log_inv_acc_p: log_acc_loglik = %s, log_acc_prior = %s' \
-                    % (-log_inv_acc_loglik, -log_inv_acc_prior)
+            print('compute_log_inv_acc_p: log_acc_loglik = %s, log_acc_prior = %s' \
+                    % (-log_inv_acc_loglik, -log_inv_acc_prior))
         assert(log_inv_acc > -np.inf)
         return log_inv_acc
 
@@ -208,13 +208,13 @@ class TreeMCMC(Tree):
             else:
                 node_id = random.choice(grow_nodes)
                 if settings.verbose >= 1:
-                    print 'grow_nodes = %s, chosen node_id = %s' % (grow_nodes, node_id)
+                    print('grow_nodes = %s, chosen node_id = %s' % (grow_nodes, node_id))
                 do_not_split_node_id, feat_id, split, idx_split_global, logprior_nodeid = \
                         self.sample_split_prior(data, param, settings, cache, node_id)
                 assert not do_not_split_node_id
                 if settings.verbose >= 1:
-                    print 'grow: do_not_split = %s, feat_id = %s, split = %s' \
-                            % (do_not_split_node_id, feat_id, split)
+                    print('grow: do_not_split = %s, feat_id = %s, split = %s' \
+                            % (do_not_split_node_id, feat_id, split))
                 train_ids = self.train_ids[node_id]
                 (train_ids_left, train_ids_right, cache_tmp, loglik_left, loglik_right) = \
                     compute_left_right_statistics(data, param, cache, train_ids, \
@@ -248,7 +248,7 @@ class TreeMCMC(Tree):
                 node_id = random.choice(self.both_children_terminal)
                 feat_id = self.node_info[node_id][0]
                 if settings.verbose >= 1:
-                    print 'prune: node_id = %s, feat_id = %s' % (node_id, feat_id)
+                    print('prune: node_id = %s, feat_id = %s' % (node_id, feat_id))
                 left, right = get_children_id(node_id)
                 loglik = self.loglik[left] + self.loglik[right]
                 len_both_children_new = len(self.both_children_terminal)
@@ -294,8 +294,8 @@ class TreeMCMC(Tree):
                 do_not_split_node_id, feat_id, split, idx_split_global, logprior_nodeid = \
                         self.sample_split_prior(data, param, settings, cache, node_id)
                 if settings.verbose >= 1:
-                    print 'change: node_id = %s, do_not_split = %s, feat_id = %s, split = %s' \
-                            % (node_id, do_not_split_node_id, feat_id, split)
+                    print('change: node_id = %s, do_not_split = %s, feat_id = %s, split = %s' \
+                            % (node_id, do_not_split_node_id, feat_id, split))
                 # Note: this just samples a split criterion, not guaranteed to "change" 
                 assert(not do_not_split_node_id)
                 nodes_subtree = self.get_nodes_subtree(node_id)
@@ -334,9 +334,9 @@ class TreeMCMC(Tree):
                 self.node_info_new[node_id] = copy(self.node_info[child_id])
                 self.node_info_new[child_id] = copy(self.node_info[node_id])
                 if settings.verbose >= 1:
-                    print 'swap: node_id = %s, child_id = %s' % (node_id, child_id)
-                    print 'node_info[node_id] = %s, node_info[child_id] = %s' \
-                            % (self.node_info[node_id], self.node_info[child_id])
+                    print('swap: node_id = %s, child_id = %s' % (node_id, child_id))
+                    print('node_info[node_id] = %s, node_info[child_id] = %s' \
+                            % (self.node_info[node_id], self.node_info[child_id]))
                 self.evaluate_new_subtree(data, node_id, param, nodes_subtree, cache, settings)
                 log_acc, loglik_diff, logprior_diff = self.compute_log_acc_cs(nodes_subtree, node_id)
                 if settings.debug == 1:
@@ -350,27 +350,27 @@ class TreeMCMC(Tree):
                 else:
                     change = False
         if settings.verbose >= 1:
-            print 'trying move: step_id = %d, move = %s, log_acc = %s, log_r = %s' \
-                    % (step_id, STEP_NAMES[step_id], log_acc, log_r)
+            print('trying move: step_id = %d, move = %s, log_acc = %s, log_r = %s' \
+                    % (step_id, STEP_NAMES[step_id], log_acc, log_r))
         if change:
             self.depth = max([get_depth(node_id) for node_id in \
                     self.leaf_nodes])
             self.loglik_current = sum([self.loglik[node_id] for node_id in \
                     self.leaf_nodes])
             if settings.verbose >= 1:
-                print 'accepted move: step_id = %d, move = %s' % (step_id, STEP_NAMES[step_id])
+                print('accepted move: step_id = %d, move = %s' % (step_id, STEP_NAMES[step_id]))
                 self.print_stuff()
         if settings.debug == 1:
             both_children_terminal, inner_pc_pairs = self.recompute_mcmc_data_structures()
-            print '\nstats from recompute_mcmc_data_structures'
-            print 'both_children_terminal = %s' % both_children_terminal
-            print 'inner_pc_pairs = %s' % inner_pc_pairs
+            print('\nstats from recompute_mcmc_data_structures')
+            print('both_children_terminal = %s' % both_children_terminal)
+            print('inner_pc_pairs = %s' % inner_pc_pairs)
             assert(sorted(both_children_terminal) == sorted(self.both_children_terminal))
             assert(sorted(inner_pc_pairs) == sorted(self.inner_pc_pairs))
             grow_nodes_new = [n_id for n_id in self.leaf_nodes \
                     if not stop_split(self.train_ids[n_id], settings, data, cache)]
             if change and (step_id == 1):
-                print 'grow_nodes_new = %s, grow_nodes_tmp = %s' % (sorted(grow_nodes_new), sorted(grow_nodes_tmp))
+                print('grow_nodes_new = %s, grow_nodes_tmp = %s' % (sorted(grow_nodes_new), sorted(grow_nodes_tmp)))
                 assert(sorted(grow_nodes_new) == sorted(grow_nodes_tmp))
         return (change, step_id)
 
@@ -385,9 +385,9 @@ class TreeMCMC(Tree):
             check_if_zero(log_acc - log_acc_2)
         except AssertionError:
             if not ((log_acc == -np.inf) and (log_acc_2 == -np.inf)):
-                print 'check if terms match:'
-                print 'loglik_diff = %s, loglik_diff_2 = %s' % (loglik_diff, loglik_diff_2)
-                print 'logprior_diff = %s, logprior_diff_2 = %s' % (logprior_diff, logprior_diff_2)
+                print('check if terms match:')
+                print('loglik_diff = %s, loglik_diff_2 = %s' % (loglik_diff, loglik_diff_2))
+                print('logprior_diff = %s, logprior_diff_2 = %s' % (logprior_diff, logprior_diff_2))
                 raise AssertionError
 
     def compute_log_acc_cs(self, nodes_subtree, node_id):
@@ -465,8 +465,8 @@ class TreeMCMC(Tree):
             try:
                 check_if_zero(self.loglik[node_id_start] - self.loglik_new[node_id_start])
             except AssertionError:
-                print 'train_ids[node_id_start] = %s, train_ids_new[node_id_start] = %s' \
-                        % (self.train_ids[node_id_start], self.train_ids_new[node_id_start])
+                print('train_ids[node_id_start] = %s, train_ids_new[node_id_start] = %s' \
+                        % (self.train_ids[node_id_start], self.train_ids_new[node_id_start]))
                 raise AssertionError
     
     def update_subtree(self, node_id, nodes_subtree, settings):
@@ -480,20 +480,20 @@ class TreeMCMC(Tree):
             self.param_n[node] = self.param_n_new[node][:]
 
     def print_stuff(self):
-        print 'tree statistics:'
-        print 'leaf nodes = '
-        print self.leaf_nodes 
-        print 'non leaf nodes = '
-        print self.non_leaf_nodes 
-        print 'inner pc pairs'
-        print self.inner_pc_pairs 
-        print 'both children terminal'
-        print self.both_children_terminal
-        print 'loglik = '
-        print self.loglik
-        print 'logprior = \n%s' % self.logprior
-        print 'do_not_split = \n%s'  % self.do_not_split
-        print 
+        print('tree statistics:')
+        print('leaf nodes = ')
+        print(self.leaf_nodes)
+        print('non leaf nodes = ')
+        print(self.non_leaf_nodes)
+        print('inner pc pairs')
+        print(self.inner_pc_pairs)
+        print('both children terminal')
+        print(self.both_children_terminal)
+        print('loglik = ')
+        print(self.loglik)
+        print('logprior = \n%s' % self.logprior)
+        print('do_not_split = \n%s'  % self.do_not_split)
+        # print
 
     def get_nodes_not_in_subtree(self, node_id):
         all_nodes = set(self.leaf_nodes + self.non_leaf_nodes)
@@ -542,10 +542,10 @@ def init_tree_mcmc(data, settings, param, cache, cache_tmp):
             # initialize with empty tree (works better in my experience since MCMC takes a while to "unlearn")
             p = TreeMCMC(np.arange(data['n_train'], dtype='int'), param, settings, cache_tmp)
         if settings.verbose >= 2:
-            print '*'*80
-            print 'initial tree:'
+            print('*'*80)
+            print('initial tree:')
             p.print_stuff()
-            print '*'*80
+            print('*'*80)
     elif settings.mcmc_type == 'pg':
         # Particle-MCMC
         # init_pmcmc handled within PMCMC class definition 
@@ -564,7 +564,7 @@ def run_mcmc_single_tree(p, settings, data, param, cache, change, mcmc_counts, c
         change = pmcmc.sample(data, settings, param, cache, cache_tmp)
         p = pmcmc.p
         if settings.debug == 1:
-            print 'change = %s, p = %s, pmcmc.p = %s' % (str(change), p, pmcmc.p)
-            print 'current logprob = %f' % pmcmc.p.compute_logprob()
-            print
+            print('change = %s, p = %s, pmcmc.p = %s' % (str(change), p, pmcmc.p))
+            print('current logprob = %f' % pmcmc.p.compute_logprob())
+            # print
     return (p, change)

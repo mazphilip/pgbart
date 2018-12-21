@@ -5,7 +5,7 @@ import random
 import numpy as np
 from copy import copy
 from bart_utils import empty, Tree, logsumexp, softmax, check_if_zero, get_children_id
-from itertools import izip, count
+# from itertools import izip, count
 
 
 class Particle(Tree):
@@ -27,7 +27,7 @@ class Particle(Tree):
             train_ids = self.train_ids[node_id]
             left, right = get_children_id(node_id)
             if settings.verbose >= 4:
-                print 'train_ids for this node = %s' % train_ids
+                print('train_ids for this node = %s' % train_ids)
             (do_not_split_node_id, feat_id_chosen, split_chosen, idx_split_global, log_sis_ratio, logprior_nodeid, \
                 train_ids_left, train_ids_right, cache_tmp, loglik_left, loglik_right) \
                 = self.prior_proposal(data, param, settings, cache, node_id, train_ids, log_psplit)
@@ -52,8 +52,8 @@ class Particle(Tree):
         nodes_processed = []
         if not self.grow_nodes:
             if settings.verbose >= 2:
-                print 'None of the leaves can be grown any further: Current ' \
-                    'depth = %3d, Skipping grow_next' % self.depth
+                print('None of the leaves can be grown any further: Current ' +
+                      'depth = %3d, Skipping grow_next' % self.depth)
         else:
             while True:
                 # loop through current leaf nodes, process first "non do_not_grow" node and break; 
@@ -64,7 +64,7 @@ class Particle(Tree):
                 do_not_grow = do_not_grow and self.do_not_split[node_id]
                 if self.do_not_split[node_id]:
                     if settings.verbose >= 3:
-                        print 'Skipping split at node_id %3d' % node_id
+                        print('Skipping split at node_id %3d' % node_id)
                     if not self.grow_nodes:
                         break
                 else:
@@ -81,8 +81,8 @@ class Particle(Tree):
         for nodes in self.nodes_processed_itr:
             for node in nodes:
                 if node in tmp:
-                    print 'node = %s present multiple times in nodes_processed_itr = %s' % \
-                            (node, self.nodes_processed_itr)
+                    print('node = %s present multiple times in nodes_processed_itr = %s' %
+                          (node, self.nodes_processed_itr))
                     raise Exception
                 else:
                     tmp.add(node)
@@ -91,7 +91,7 @@ class Particle(Tree):
 def update_particle_weights(particles, log_weights, settings):
     for n, p in enumerate(particles):
         if settings.verbose >= 2:
-            print 'pid = %5d, log_sis_ratio = %f' % (n, p.log_sis_ratio)
+            print('pid = %5d, log_sis_ratio = %f' % (n, p.log_sis_ratio))
         log_weights[n] += p.log_sis_ratio
     weights_norm = softmax(log_weights)     # normalized weights
     ess = 1. / np.sum(weights_norm ** 2) / settings.n_particles
@@ -111,12 +111,12 @@ def resample(particles, log_weights, settings, log_pd, ess, weights_norm, tree_p
     else:
         pid_list = range(settings.n_particles)
     if settings.verbose >= 2:
-        print 'ess = %s, ess_threshold = %s' % (ess, settings.ess_threshold)
-        print 'new particle ids = '
-        print pid_list
+        print('ess = %s, ess_threshold = %s' % (ess, settings.ess_threshold))
+        print('new particle ids = ')
+        print(pid_list)
     op = create_new_particles(particles, pid_list, settings)
     # update ancestry
-    for pid, p in izip(pid_list, op):
+    for pid, p in zip(pid_list, op):
         p.ancestry.append(pid)
     return (op, log_weights)
 
@@ -222,11 +222,11 @@ def grow_next_pg(p, tree_pg, itr, settings):
             try:
                 log_sis_ratio_loglik_old, log_sis_ratio_prior = tree_pg.log_sis_ratio_d[node_id] 
             except KeyError:
-                print 'tree_pg: node_info = %s, log_sis_ratio_d = %s' % (tree_pg.node_info, tree_pg.log_sis_ratio_d)
+                print('tree_pg: node_info = %s, log_sis_ratio_d = %s' % (tree_pg.node_info, tree_pg.log_sis_ratio_d))
                 raise KeyError
             if settings.verbose >= 2:
-                print 'log_sis_ratio_loglik_old = %s' % log_sis_ratio_loglik_old
-                print 'log_sis_ratio_loglik_new = %s' % log_sis_ratio_loglik_new
+                print('log_sis_ratio_loglik_old = %s' % log_sis_ratio_loglik_old)
+                print('log_sis_ratio_loglik_new = %s' % log_sis_ratio_loglik_new)
             p.log_sis_ratio = log_sis_ratio_loglik_new + log_sis_ratio_prior
             tree_pg.log_sis_ratio_d[node_id] = (log_sis_ratio_loglik_new, log_sis_ratio_prior)
             p.log_sis_ratio_d[node_id] = tree_pg.log_sis_ratio_d[node_id]
@@ -234,7 +234,7 @@ def grow_next_pg(p, tree_pg, itr, settings):
             try:
                 p.leaf_nodes.remove(node_id)
             except ValueError:
-                print 'warning: unable to remove node_id = %s from leaf_nodes = %s' % (node_id, p.leaf_nodes)
+                print('warning: unable to remove node_id = %s from leaf_nodes = %s' % (node_id, p.leaf_nodes))
                 pass
             p.leaf_nodes.append(left)
             p.leaf_nodes.append(right)
@@ -251,9 +251,9 @@ def grow_next_pg(p, tree_pg, itr, settings):
                 p.param_n[node_id_child] = tree_pg.param_n[node_id_child]
                 p.n_points[node_id_child] = tree_pg.n_points[node_id_child]
         if settings.verbose >= 2:
-            print 'p.leaf_nodes = %s' % p.leaf_nodes
-            print 'p.non_leaf_nodes = %s' % p.non_leaf_nodes
-            print 'p.node_info.keys() = %s' % sorted(p.node_info.keys())
+            print('p.leaf_nodes = %s' % p.leaf_nodes)
+            print('p.non_leaf_nodes = %s' % p.non_leaf_nodes)
+            print('p.node_info.keys() = %s' % sorted(p.node_info.keys()))
         try:
             p.grow_nodes = tree_pg.grow_nodes_itr[itr+1]
             p.log_sis_ratio_d = tree_pg.log_sis_ratio_d
@@ -266,62 +266,62 @@ def grow_next_pg(p, tree_pg, itr, settings):
 
 def run_smc(particles, data, settings, param, log_weights, cache, tree_pg=None):
     if settings.verbose >= 2:
-        print 'Conditioned tree:'
+        print('Conditioned tree:')
         tree_pg.print_tree()
     itr = 0
     while True:
         if settings.verbose >= 2:
-            print '\n'
-            print '*'*80
-            print 'Current iteration = %3d' % itr
-            print '*'*80
+            print('\n')
+            print('*'*80)
+            print('Current iteration = %3d' % itr)
+            print('*'*80)
         if itr != 0:
             # no resampling required when itr == 0 since weights haven't been updated yet
             if settings.verbose >= 1:
-                print 'iteration = %3d, log p(y|x) = %.2f, ess/n_particles = %f'  % (itr, log_pd, ess)
+                print('iteration = %3d, log p(y|x) = %.2f, ess/n_particles = %f'  % (itr, log_pd, ess))
             (particles, log_weights) = resample(particles, log_weights, settings, log_pd, \
                                                     ess, weights_norm, tree_pg)
         for pid, p in enumerate(particles):
             if settings.verbose >= 2:
-                print 'Current particle = %3d' % pid
-                print 'grow_nodes = %s' % p.grow_nodes
-                print 'leaf_nodes = %s, non_leaf_nodes = %s' % (p.leaf_nodes, p.non_leaf_nodes)
+                print('Current particle = %3d' % pid)
+                print('grow_nodes = %s' % p.grow_nodes)
+                print('leaf_nodes = %s, non_leaf_nodes = %s' % (p.leaf_nodes, p.non_leaf_nodes))
             if p.grow_nodes:
                 p.grow_nodes_itr.append(p.grow_nodes[:])
             if tree_pg and (pid == 0):
                 if settings.verbose >= 2 and itr == 0:
                     for s in ['leaf_nodes', 'non_leaf_nodes', 'grow_nodes_itr', 'ancestry', 'nodes_processed_itr']:
-                        print 'p.%s = %s' % (s, getattr(p, s))
+                        print('p.%s = %s' % (s, getattr(p, s)))
                 grow_next_pg(p, tree_pg, itr, settings)
             else:
                 p.grow_next(data, param, settings, cache)
             p.update_depth()
             if settings.verbose >= 2:
-                print 'nodes_processed_itr for particle = %s' % p.nodes_processed_itr
-                print 'grow_nodes (after running grow_next) (NOT updated for conditioned tree_pg) = %s' % p.grow_nodes
-                print 'leaf_nodes = %s, non_leaf_nodes = %s' % (p.leaf_nodes, p.non_leaf_nodes)
-                print 'nodes_processed_itr for particle (after running update_particle weights) = %s' % p.nodes_processed_itr
-                print 'checking nodes_processed_itr'
+                print('nodes_processed_itr for particle = %s' % p.nodes_processed_itr)
+                print('grow_nodes (after running grow_next) (NOT updated for conditioned tree_pg) = %s' % p.grow_nodes)
+                print('leaf_nodes = %s, non_leaf_nodes = %s' % (p.leaf_nodes, p.non_leaf_nodes))
+                print('nodes_processed_itr for particle (after running update_particle weights) = %s' % p.nodes_processed_itr)
+                print('checking nodes_processed_itr')
         (log_pd, ess, log_weights, weights_norm) = \
                     update_particle_weights(particles, log_weights, settings)     # in place update of log_weights
         if settings.verbose >= 2:
-            print 'log_weights = %s' % log_weights
+            print('log_weights = %s' % log_weights)
         if check_do_not_grow(particles):
             if settings.verbose >= 1:
-                print 'None of the particles can be grown any further; breaking out'
+                print('None of the particles can be grown any further; breaking out')
             break
         itr += 1
     if (settings.debug == 1) and tree_pg:
         for pid, p in enumerate(particles):
             if settings.verbose >=2 :
-                print 'checking pid = %s' % pid
+                print('checking pid = %s' % pid)
             p.check_nodes_processed_itr(settings)
         if settings.verbose >= 2:  
-            print 'check if tree_pg did the right thing:'
-            print 'nodes_processed_itr (orig, new):\n%s\n%s' % (tree_pg.nodes_processed_itr, particles[0].nodes_processed_itr)
-            print 'leaf_nodes (orig, new):\n%s\n%s' % (tree_pg.leaf_nodes, particles[0].leaf_nodes)
-            print 'non_leaf_nodes (orig, new):\n%s\n%s' % (tree_pg.non_leaf_nodes, particles[0].non_leaf_nodes)
-            print 'grow_nodes_itr (orig, new):\n%s\n%s' % (tree_pg.grow_nodes_itr, particles[0].grow_nodes_itr)
+            print('check if tree_pg did the right thing:')
+            print('nodes_processed_itr (orig, new):\n%s\n%s' % (tree_pg.nodes_processed_itr, particles[0].nodes_processed_itr))
+            print('leaf_nodes (orig, new):\n%s\n%s' % (tree_pg.leaf_nodes, particles[0].leaf_nodes))
+            print('non_leaf_nodes (orig, new):\n%s\n%s' % (tree_pg.non_leaf_nodes, particles[0].non_leaf_nodes))
+            print('grow_nodes_itr (orig, new):\n%s\n%s' % (tree_pg.grow_nodes_itr, particles[0].grow_nodes_itr))
         assert particles[0].leaf_nodes == tree_pg.leaf_nodes
         assert particles[0].non_leaf_nodes == tree_pg.non_leaf_nodes
         assert particles[0].grow_nodes_itr == tree_pg.grow_nodes_itr
