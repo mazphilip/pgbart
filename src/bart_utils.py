@@ -806,8 +806,8 @@ class Tree(object):
         """
         faster version of predict_real_val
         """
-        leaf_id = exec(self.rules)    # create variable "leaf_id"
-        pred_val = self.pred_val_n[leaf_id]
+        exec(self.rules)    # create variable "leaf_id"
+        pred_val = self.pred_val_n[locals()['leaf_id']]
         return pred_val
 
     def compute_psplit(self, node_id, param):

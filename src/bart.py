@@ -97,7 +97,7 @@ class BART(object):
         for i_t in range(settings.m_bart):
             # print("ABC {}".format(self.trees[i_t].rules))
             exec(self.trees[i_t].rules)    # apply rules to "x" and create "leaf_id"
-            pred_val += np.squeeze(self.trees[i_t].pred_val_n[leaf_id])
+            pred_val += np.squeeze(self.trees[i_t].pred_val_n[locals()['leaf_id']])
         pred_prob = np.exp(- 0.5 * param.lambda_bart * ((y - pred_val) ** 2) + log_const)
         d = {'pred_mean': pred_val, 'pred_prob': pred_prob}
         return d
